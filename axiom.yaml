@@ -25,3 +25,6 @@ nodes:
 imports:
   - package: axiom-official/axiom-agent-messages
     version: 0.1.0
+    messages:
+      - AgentRequest
+      - AgentProgress
