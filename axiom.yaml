@@ -1,0 +1,24 @@
+name: axiom-official/axiom-agent
+version: 0.1.0
+language: python
+description: Top-level Axiom agent orchestrator. Routes AgentRequests to the appropriate specialized sub-flow based on intent classification.
+author: Axiom Official
+license: MIT
+nodes:
+  - name: OrchestratorEntry
+    input: AgentRequest
+    output: AgentRequest
+    description: Entry point for the agent. Fetches the user's GitHub token via GET /app/github/token and attaches it to the AgentRequest before routing.
+  - name: IntentRouter
+    input: AgentRequest
+    output: AgentRequest
+    description: Classifies the user's intent into one of six categories (build_package, design_flow, debug_package, refactor_package, debug_flow, refactor_flow) and sets AgentRequest.intent.
+    required_secrets:
+      - ANTHROPIC_API_KEY
+  - name: StreamStatusToUser
+    input: AgentProgress
+    output: AgentProgress
+    description: Pipeline node. Forwards AgentProgress frames to the user in real time, enriching the message with execution context.
+    node_type: pipeline
+imports:
+  - axiom-official/axiom-agent-messages
