@@ -1,10 +1,6 @@
-import pytest
-from unittest.mock import MagicMock, patch
-
-
 def test_intent_router_imports():
     import nodes.intent_router as m
-    assert hasattr(m, "handle")
+    assert hasattr(m, "intent_router")
 
 
 def test_valid_intents():

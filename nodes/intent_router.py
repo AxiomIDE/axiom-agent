@@ -1,12 +1,10 @@
 import json
-import logging
 import os
 
 import anthropic
 
 from gen.axiom_official_axiom_agent_messages_messages_pb2 import AgentRequest
-
-logger = logging.getLogger(__name__)
+from gen.axiom_logger import AxiomLogger, AxiomSecrets
 
 VALID_INTENTS = {
     "build_package",
@@ -29,16 +27,19 @@ Classify the user's goal into exactly one of these intents:
 Return JSON: {"intent": "<one of the six values above>", "confidence": 0.0-1.0}"""
 
 
-def handle(req: AgentRequest, context) -> AgentRequest:
-    """Classify intent and set AgentRequest.intent."""
-    api_key = context.secrets.get("ANTHROPIC_API_KEY") if hasattr(context, 'secrets') else os.environ.get("ANTHROPIC_API_KEY", "")
+def intent_router(log: AxiomLogger, secrets: AxiomSecrets, input: AgentRequest) -> AgentRequest:
+    """Classify the user's intent into one of six categories (build_package,
+    design_flow, debug_package, refactor_package, debug_flow, refactor_flow)
+    and sets AgentRequest.intent using an Anthropic LLM call.
+    """
+    api_key = secrets.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_API_KEY", "")
     client = anthropic.Anthropic(api_key=api_key)
 
     message = client.messages.create(
         model="claude-sonnet-4-5",
         max_tokens=256,
         system=SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": req.goal}]
+        messages=[{"role": "user", "content": input.goal}]
     )
 
     content = message.content[0].text
@@ -61,8 +62,8 @@ def handle(req: AgentRequest, context) -> AgentRequest:
         intent = "build_package"
 
     routed = AgentRequest()
-    routed.CopyFrom(req)
+    routed.CopyFrom(input)
     routed.intent = intent
 
-    logger.info(f"Routed intent: {intent} for goal: {req.goal[:80]}")
+    log.info(f"Routed intent: {intent} for goal: {input.goal[:80]}")
     return routed
