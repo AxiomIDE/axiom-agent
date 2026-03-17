@@ -30,7 +30,7 @@ def intent_router(log: AxiomLogger, secrets: AxiomSecrets, input: AgentRequest) 
     """Classifies the user's prompt and sets AgentRequest.intent. The
     orchestrator's conditional edges branch on this field to route to the
     appropriate specialised sub-flow."""
-    api_key = secrets.get("ANTHROPIC_API_KEY")
+    api_key, _ = secrets.get("ANTHROPIC_API_KEY")
     client = anthropic.Anthropic(api_key=api_key)
 
     message = client.messages.create(
