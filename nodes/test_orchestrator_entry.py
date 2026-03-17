@@ -1,3 +1,5 @@
+from nodes.orchestrator_entry import orchestrator_entry
+
+
 def test_orchestrator_entry_imports():
-    import nodes.orchestrator_entry as m
-    assert hasattr(m, "orchestrator_entry")
+    assert callable(orchestrator_entry)
