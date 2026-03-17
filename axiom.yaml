@@ -5,24 +5,27 @@ description: Top-level Axiom agent orchestrator. Routes AgentRequests to the app
 author: Axiom Official
 license: MIT
 nodes:
-  - name: OrchestratorEntry
-    input: AgentRequest
-    output: AgentRequest
-    description: Entry point for the agent. Validates the prompt is non-empty before routing.
-  - name: IntentRouter
-    input: AgentRequest
-    output: AgentRequest
-    description: Classifies the user's prompt into one of six intents (build_package, design_flow, debug_package, refactor_package, debug_flow, refactor_flow) and sets AgentRequest.intent for conditional edge routing.
-    required_secrets:
-      - ANTHROPIC_API_KEY
-  - name: StreamStatusToUser
-    input: AgentProgress
-    output: AgentProgress
-    description: Pipeline node. Forwards AgentProgress frames to the user in real time.
-    type: pipeline
+    - name: OrchestratorEntry
+      description: Entry point for the agent. Validates the prompt is non-empty before routing.
+      input: AgentRequest
+      output: AgentRequest
+    - name: IntentRouter
+      description: Classifies the user's prompt into one of six intents (build_package, design_flow, debug_package, refactor_package, debug_flow, refactor_flow) and sets AgentRequest.intent for conditional edge routing.
+      input: AgentRequest
+      output: AgentRequest
+      required_secrets:
+        - ANTHROPIC_API_KEY
+    - name: StreamStatusToUser
+      description: Pipeline node. Forwards AgentProgress frames to the user in real time.
+      input: AgentProgress
+      output: AgentProgress
+      type: pipeline
 imports:
-  - package: axiom-official/axiom-agent-messages
-    version: 0.1.0
-    messages:
-      - AgentRequest
-      - AgentProgress
+    - package: axiom-official/axiom-agent-messages
+      version: 0.1.0
+      messages:
+        - AgentRequest
+        - AgentProgress
+        - NodeSpec
+        - PackageBuildContext
+        - FlowBuildContext
