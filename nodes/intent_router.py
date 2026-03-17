@@ -1,5 +1,4 @@
 import json
-import os
 
 import anthropic
 
@@ -16,7 +15,7 @@ VALID_INTENTS = {
 }
 
 SYSTEM_PROMPT = """You are an Axiom agent intent classifier.
-Classify the user's goal into exactly one of these intents:
+Classify the user's prompt into exactly one of these intents:
 - build_package: User wants to create a new Axiom package
 - design_flow: User wants to create or design a new flow graph
 - debug_package: User wants to debug a failing package/node
@@ -28,18 +27,17 @@ Return JSON: {"intent": "<one of the six values above>", "confidence": 0.0-1.0}"
 
 
 def intent_router(log: AxiomLogger, secrets: AxiomSecrets, input: AgentRequest) -> AgentRequest:
-    """Classify the user's intent into one of six categories (build_package,
-    design_flow, debug_package, refactor_package, debug_flow, refactor_flow)
-    and sets AgentRequest.intent using an Anthropic LLM call.
-    """
-    api_key = secrets.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_API_KEY", "")
+    """Classifies the user's prompt and sets AgentRequest.intent. The
+    orchestrator's conditional edges branch on this field to route to the
+    appropriate specialised sub-flow."""
+    api_key = secrets.get("ANTHROPIC_API_KEY")
     client = anthropic.Anthropic(api_key=api_key)
 
     message = client.messages.create(
         model="claude-sonnet-4-5",
         max_tokens=256,
         system=SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": input.goal}]
+        messages=[{"role": "user", "content": input.prompt}]
     )
 
     content = message.content[0].text
@@ -61,9 +59,9 @@ def intent_router(log: AxiomLogger, secrets: AxiomSecrets, input: AgentRequest) 
     if intent not in VALID_INTENTS:
         intent = "build_package"
 
+    log.info(f"Routed intent: {intent} — prompt: {input.prompt[:80]}")
+
     routed = AgentRequest()
     routed.CopyFrom(input)
     routed.intent = intent
-
-    log.info(f"Routed intent: {intent} for goal: {input.goal[:80]}")
     return routed
